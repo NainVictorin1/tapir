@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/NainVictorin1/homework2/Internal/data"
 	_ "github.com/lib/pq"
 )
 
@@ -17,6 +18,8 @@ type application struct {
 	feedback      *data.FeedbackModel
 	logger        *slog.Logger
 	templateCache map[string]*template.Template
+	todos         *data.TodoModel
+	journals      *data.JournalModel
 }
 
 func main() {
@@ -46,6 +49,8 @@ func main() {
 		feedback:      &data.FeedbackModel{DB: db},
 		logger:        logger,
 		templateCache: templateCache,
+		journals:      &data.JournalModel{DB: db},
+		todos:         &data.TodoModel{DB: db},
 	}
 
 	err = app.serve()

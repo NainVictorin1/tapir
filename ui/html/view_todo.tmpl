@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Todo Entries</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Todo Entries</h1>
+        <table class="todo-table">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Deadline</th>
+                    <th>Submitted On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Todos}}
+                <tr>
+                    <td>{{.Task}}</td>
+                    <td>{{.Deadline}}</td>
+                    <td>{{.SubmittedAt}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

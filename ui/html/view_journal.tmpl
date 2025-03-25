@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Journal Entries</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Journal Entries</h1>
+        <table class="journal-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Entry</th>
+                    <th>Submitted On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Journals}}
+                <tr>
+                    <td>{{.Title}}</td>
+                    <td>{{.Entry}}</td>
+                    <td>{{.SubmittedAt}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

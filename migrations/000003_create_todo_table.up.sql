@@ -1,0 +1,6 @@
+CREATE TABLE todo (
+    id SERIAL PRIMARY KEY,
+    task VARCHAR(255) NOT NULL,
+    deadline DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

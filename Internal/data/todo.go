@@ -16,7 +16,7 @@ type Todo struct {
 	CreatedAt   time.Time `json:"created_at"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
-	Status      string    `json:"status"` // e.g., "pending", "completed"
+	Status      string    `json:"status"`
 }
 
 // ValidateTodo ensures the fields in a to-do item are correctly formatted.
@@ -43,15 +43,20 @@ func (m *TodoModel) Insert(todo *Todo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	return m.DB.QueryRowContext(ctx, query, todo.Title, todo.Description, todo.Status).Scan(&todo.ID, &todo.CreatedAt)
+	return m.DB.QueryRowContext(
+		ctx,
+		query,
+		todo.Title,
+		todo.Description,
+		todo.Status,
+	).Scan(&todo.ID, &todo.CreatedAt)
 }
-
-// Get retrieves a specific to-do entry by ID.
-func (m *TodoModel) Get(id int64) (*Todo, error) {
+func (m *TodoModel) Get(id int) (*Todo, error) {
 	query := `
 		SELECT id, title, description, status, created_at
 		FROM todos
-		WHERE id = $1`
+		WHERE id = $1
+	`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -96,7 +101,7 @@ func (m *TodoModel) GetAll() ([]*Todo, error) {
 			&todo.Title,
 			&todo.Description,
 			&todo.Status,
-			&todo.CreatedAt, // Ensure this is the last field scanned
+			&todo.CreatedAt,
 		)
 		if err != nil {
 			return nil, err

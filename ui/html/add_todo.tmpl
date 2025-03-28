@@ -4,18 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Todo</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .error-messages {
+            background: #ffdddd;
+            color: #d8000c;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        input, textarea, select {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: block;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 80px;
+        }
+
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin-top: 15px;
+            width: 100%;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #218838;
+        }
+
+        .link {
+            margin-top: 15px;
+            display: block;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
+
     <div class="container">
-        <h2>Add a Todo</h2>
-        <form action="/todo" method="POST">
-            <label for="task">Todo Task:</label>
-            <input type="text" id="task" name="task" required placeholder="Enter your task...">
+        <h1>Add a New Todo</h1>
+
+        {{if .FormErrors}}
+            <div class="error-messages">
+                <p><strong>Please fix the following errors:</strong></p>
+                <ul>
+                    {{range $key, $msg := .FormErrors}}
+                        <li><strong>{{$key}}:</strong> {{$msg}}</li>
+                    {{end}}
+                </ul>
+            </div>
+        {{end}}
+
+        <form action="/todo/submit" method="POST">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" value="{{.FormData.title}}" placeholder="Enter task title" required>
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description" placeholder="Enter task details" required>{{.FormData.description}}</textarea>
+
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+            </select>
+
             <button type="submit">Add Todo</button>
-            <a href="/todo/view" class="btn btn-secondary">View Todos Item</a>
-            <a href="/" class="btn btn-secondary">Back to Home</a>
         </form>
+
+        <a class="link" href="/todo/view">View Todo List</a>
     </div>
+
 </body>
 </html>

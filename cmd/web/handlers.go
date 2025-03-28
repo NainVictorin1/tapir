@@ -128,8 +128,9 @@ func (app *application) submitTodoHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	todo := &data.Todo{
-		Title:       r.PostForm.Get("titulo"),
+		Title:       r.PostForm.Get("title"),
 		Description: r.PostForm.Get("description"),
+		Status:      r.PostForm.Get("status"),
 	}
 
 	v := validator.NewValidator()
@@ -137,16 +138,16 @@ func (app *application) submitTodoHandler(w http.ResponseWriter, r *http.Request
 
 	if !v.ValidData() {
 		data := NewTemplateData()
-		data.Title = "Add Todo"
+		data.Title = "add_todo"
 		data.FormErrors = v.Errors
 		data.FormData = map[string]string{
-			"titulo":      todo.Title,
+			"title":       todo.Title,
 			"description": todo.Description,
 		}
 
 		err := app.render(w, http.StatusUnprocessableEntity, "add_todo.tmpl", data)
 		if err != nil {
-			app.logger.Error("failed to render todo form", "template", "add_todo.tmpl", "error", err, "url", r.URL.Path, "method", r.Method)
+			app.logger.Error("failed to render todo form", "template", "add_todo.tmpl", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}

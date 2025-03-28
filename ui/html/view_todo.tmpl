@@ -3,30 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Todo Entries</title>
+    <title>View To-Do List</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Todo Entries</h1>
-        <table class="todo-table">
-            <thead>
-                <tr>
-                    <th>Task</th>
-                    <th>Deadline</th>
-                    <th>Submitted On</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .Todos}}
-                <tr>
-                    <td>{{.Task}}</td>
-                    <td>{{.Deadline}}</td>
-                    <td>{{.SubmittedAt}}</td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
+        <h1>To-Do List</h1>
+
+        {{if not .Todos}}
+            <p>No tasks available.</p>
+        {{else}}
+            <table class="todo-table">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Created On</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Todos}}
+                    <tr>
+                        <td>{{.Task}}</td>
+                        <td>{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</td>
+                        <td>
+                            {{if .Completed}}
+                                <span class="completed">Completed</span>
+                            {{else}}
+                                <span class="pending">Pending</span>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        {{end}}
+
+        <a href="/todo/submit" class="btn">Add New Task</a>
+        <a href="/home" class="btn">Back to Home</a>
     </div>
 </body>
 </html>

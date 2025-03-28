@@ -9,24 +9,32 @@
 <body>
     <div class="container">
         <h1>Journal Entries</h1>
-        <table class="journal-table">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Entry</th>
-                    <th>Submitted On</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .Journals}}
-                <tr>
-                    <td>{{.Title}}</td>
-                    <td>{{.Entry}}</td>
-                    <td>{{.SubmittedAt}}</td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
+
+        {{if not .Journals}}
+            <p>No journal entries available.</p>
+        {{else}}
+            <table class="journal-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Entry</th>
+                        <th>Submitted On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Journals}}
+                    <tr>
+                        <td>{{.Title}}</td>
+                        <td>{{.Entry}}</td>
+                        <td>{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        {{end}}
+
+        <a href="/journal/submit" class="btn">Submit New Journal</a>
+        <a href="/home" class="btn">Back to Home</a>
     </div>
 </body>
 </html>

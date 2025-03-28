@@ -9,8 +9,10 @@ type TemplateData struct {
 	HeaderText string
 	FormErrors map[string]string
 	FormData   map[string]string
-	Todos      []*data.Todo
-	Journals   []*data.Journal
+
+	Todos     []*data.Todo
+	Journals  []*data.Journal
+	Feedbacks []*data.Feedback
 }
 
 func NewTemplateData() *TemplateData {

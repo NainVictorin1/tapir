@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/NainVictorin1/homework2/Internal/validator"
 )
 
 // Journal represents a journal entry in the database
@@ -17,6 +19,12 @@ type Journal struct {
 // JournalModel handles database operations for journal entries
 type JournalModel struct {
 	DB *sql.DB
+}
+
+func ValidateJournal(v *validator.Validator, journal *Journal) {
+	v.Check(validator.NotBlank(journal.Title), "title", "must be provided")
+	v.Check(validator.NotBlank(journal.Entry), "entry", "must be provided")
+	v.Check(validator.MaxLength(journal.Entry, 1000), "entry", "must not be more than 1000 characters long")
 }
 
 // Insert adds a new journal entry to the database
@@ -64,9 +72,7 @@ func (m *JournalModel) Get(id int) (*Journal, error) {
 // GetAll retrieves all journal entries sorted by date (newest first)
 func (m *JournalModel) GetAll() ([]*Journal, error) {
 	query := `
-		SELECT id, title, entry, created_at
-		FROM journals
-		ORDER BY created_at DESC
+		SELECT id, title, entry, created_at FROM journals ORDER BY created_at DESC
 	`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

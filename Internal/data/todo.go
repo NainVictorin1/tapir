@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/NainVictorin1/homework2/Internal/validator"
 )
 
 // Todo represents a todo item in the database
@@ -17,6 +19,13 @@ type Todo struct {
 // TodoModel handles database operations for todo items
 type TodoModel struct {
 	DB *sql.DB
+}
+
+func ValidateTodo(v *validator.Validator, todo *Todo) {
+	v.Check(validator.NotBlank(todo.Task), "task", "must be provided")
+	if todo.Deadline.IsZero() {
+		v.AddError("deadline", "must be a valid date and cannot be empty")
+	}
 }
 
 // Insert adds a new todo item to the database
@@ -63,10 +72,7 @@ func (m *TodoModel) Get(id int) (*Todo, error) {
 
 // GetAll retrieves all todo items sorted by deadline (soonest first)
 func (m *TodoModel) GetAll() ([]*Todo, error) {
-	query := `
-		SELECT id, task, deadline, created_at
-		FROM todos
-		ORDER BY deadline ASC
+	query := `SELECT id, task, deadline, created_at FROM todos ORDER BY deadline ASC
 	`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

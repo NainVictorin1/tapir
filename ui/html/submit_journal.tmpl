@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Journal Entry</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Submit a New Journal Entry</h1>
+
+        {{if .FormErrors}}
+            <div class="error-box">
+                <p>Please correct the following errors:</p>
+                <ul>
+                    {{range .FormErrors}}
+                        <li>{{.}}</li>
+                    {{end}}
+                </ul>
+            </div>
+        {{end}}
+
+        <form action="/journal/submit" method="POST" class="form-container">
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" value="{{.FormData.title}}" required>
+
+            <label for="entry">Journal Entry:</label>
+            <textarea id="entry" name="entry" rows="6" required>{{.FormData.entry}}</textarea>
+
+            <button type="submit" class="btn">Submit Journal</button>
+        </form>
+
+        <a href="/journal/view" class="btn btn-secondary">View Entries</a>
+        <a href="/home" class="btn btn-secondary">Back to Home</a>
+    </div>
+</body>
+</html>

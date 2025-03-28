@@ -7,19 +7,46 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container">
+    <div class="container feedback-container">
         <h1>Submit Your Feedback</h1>
-        <form action="/feedback" method="POST">
-            <div class="form-group">
+        <p>We value your thoughts and would love to hear from you!</p>
+
+        {{ if .FormErrors }}
+        <div class="error-box">
+            <h3>Please fix the following errors:</h3>
+            <ul>
+                {{ range $field, $error := .FormErrors }}
+                <li><strong>{{ $field }}:</strong> {{ $error }}</li>
+                {{ end }}
+            </ul>
+        </div>
+        {{ end }}
+
+        <form action="/feedback/create" method="POST" class="feedback-form">
+            <div class="input-group">
+                <label for="name">Full Name:</label>
+                <input type="text" id="name" name="name" value="{{ .FormData.name }}" placeholder="Enter your name" required>
+            </div>
+
+            <div class="input-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required placeholder="Enter your email" class="form-input">
+                <input type="email" id="email" name="email" value="{{ .FormData.email }}" placeholder="Enter your email" required>
             </div>
-            <div class="form-group">
-                <label for="message">Feedback:</label>
-                <textarea id="message" name="message" required placeholder="Enter your feedback" class="form-textarea"></textarea>
+
+            <div class="input-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject" name="subject" value="{{ .FormData.subject }}" placeholder="Enter the subject" required>
             </div>
-            <button type="submit" class="form-button">Submit Feedback</button>
+
+            <div class="input-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="5" placeholder="Write your message here..." required>{{ .FormData.message }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit Feedback</button>
         </form>
+        <a href="/feedback/view" class="btn btn-secondary">View Feedback</a>
+        <a href="/" class="btn btn-secondary">Back to Home</a>
     </div>
 </body>
 </html>

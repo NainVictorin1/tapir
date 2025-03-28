@@ -3,56 +3,55 @@ package data
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/NainVictorin1/homework2/Internal/validator"
+	_ "github.com/lib/pq"
 )
 
-// Todo represents a todo item in the database
+// Todo represents a to-do item in the database.
 type Todo struct {
-	ID        int       `json:"id"`
-	Task      string    `json:"task"`
-	Deadline  time.Time `json:"deadline"`
-	CreatedAt time.Time `json:"created_at"`
+	ID          int64     `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Status      string    `json:"status"` // e.g., "pending", "completed"
 }
 
-// TodoModel handles database operations for todo items
+// ValidateTodo ensures the fields in a to-do item are correctly formatted.
+func ValidateTodo(v *validator.Validator, todo *Todo) {
+	v.Check(validator.NotBlank(todo.Title), "title", "must be provided")
+	v.Check(validator.MaxLength(todo.Title, 100), "title", "must not exceed 100 characters")
+	v.Check(validator.NotBlank(todo.Description), "description", "must be provided")
+	v.Check(validator.MaxLength(todo.Description, 1000), "description", "must not exceed 1000 characters")
+	v.Check(todo.Status == "pending" || todo.Status == "completed", "status", "must be 'pending' or 'completed'")
+}
+
+// TodoModel handles database operations for to-do entries.
 type TodoModel struct {
 	DB *sql.DB
 }
 
-func ValidateTodo(v *validator.Validator, todo *Todo) {
-	v.Check(validator.NotBlank(todo.Task), "task", "must be provided")
-	if todo.Deadline.IsZero() {
-		v.AddError("deadline", "must be a valid date and cannot be empty")
-	}
-}
-
-// Insert adds a new todo item to the database
+// Insert adds a new to-do entry to the database.
 func (m *TodoModel) Insert(todo *Todo) error {
 	query := `
-		INSERT INTO todos (task, deadline, created_at)
-		VALUES ($1, $2, NOW())
-		RETURNING id, created_at
-	`
+		INSERT INTO todos (title, description, status)
+		VALUES ($1, $2, $3)
+		RETURNING id, created_at`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, todo.Task, todo.Deadline).Scan(&todo.ID, &todo.CreatedAt)
-	if err != nil {
-		return err
-	}
-	return nil
+	return m.DB.QueryRowContext(ctx, query, todo.Title, todo.Description, todo.Status).Scan(&todo.ID, &todo.CreatedAt)
 }
 
-// Get retrieves a specific todo item by ID
-func (m *TodoModel) Get(id int) (*Todo, error) {
+// Get retrieves a specific to-do entry by ID.
+func (m *TodoModel) Get(id int64) (*Todo, error) {
 	query := `
-		SELECT id, task, deadline, created_at
+		SELECT id, title, description, status, created_at
 		FROM todos
-		WHERE id = $1
-	`
+		WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -60,8 +59,9 @@ func (m *TodoModel) Get(id int) (*Todo, error) {
 	todo := &Todo{}
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&todo.ID,
-		&todo.Task,
-		&todo.Deadline,
+		&todo.Title,
+		&todo.Description,
+		&todo.Status,
 		&todo.CreatedAt,
 	)
 	if err != nil {
@@ -70,10 +70,14 @@ func (m *TodoModel) Get(id int) (*Todo, error) {
 	return todo, nil
 }
 
-// GetAll retrieves all todo items sorted by deadline (soonest first)
+// GetAll retrieves all to-do items sorted by ID (newest first).
 func (m *TodoModel) GetAll() ([]*Todo, error) {
-	query := `SELECT id, task, deadline, created_at FROM todos ORDER BY deadline ASC
-	`
+	query := `
+		SELECT id, title, description, status, created_at
+		FROM todos
+		ORDER BY id DESC`
+
+	fmt.Println("Fetching to-do data...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -89,9 +93,10 @@ func (m *TodoModel) GetAll() ([]*Todo, error) {
 		todo := &Todo{}
 		err := rows.Scan(
 			&todo.ID,
-			&todo.Task,
-			&todo.Deadline,
-			&todo.CreatedAt,
+			&todo.Title,
+			&todo.Description,
+			&todo.Status,
+			&todo.CreatedAt, // Ensure this is the last field scanned
 		)
 		if err != nil {
 			return nil, err
@@ -99,11 +104,12 @@ func (m *TodoModel) GetAll() ([]*Todo, error) {
 		todos = append(todos, todo)
 	}
 
+	fmt.Println("Successfully retrieved to-do data.")
 	return todos, nil
 }
 
-// Delete removes a todo item from the database by ID
-func (m *TodoModel) Delete(id int) error {
+// Delete removes a to-do entry by ID.
+func (m *TodoModel) Delete(id int64) error {
 	query := `DELETE FROM todos WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

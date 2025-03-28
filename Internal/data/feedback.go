@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/NainVictorin1/homework2/Internal/validator"
@@ -65,11 +66,11 @@ func (m *FeedbackModel) Get(id int) (*Feedback, error) {
 	feedback := &Feedback{}
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&feedback.ID,
-		&feedback.CreatedAt,
 		&feedback.Fullname,
 		&feedback.Subject,
 		&feedback.Message,
 		&feedback.Email,
+		&feedback.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -80,8 +81,11 @@ func (m *FeedbackModel) Get(id int) (*Feedback, error) {
 // GetAll retrieves all journal entries sorted by date (newest first)
 func (m *FeedbackModel) GetAll() ([]*Feedback, error) {
 	query := `
-		SELECT id, title, entry, created_at FROM journals ORDER BY created_at DESC
-	`
+		SELECT id, fullname, subject, message, email, created_at
+		FROM feedback
+		ORDER BY id DESC`
+
+	fmt.Println("Fetching feedback data...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -97,11 +101,11 @@ func (m *FeedbackModel) GetAll() ([]*Feedback, error) {
 		feedback := &Feedback{}
 		err := rows.Scan(
 			&feedback.ID,
-			&feedback.CreatedAt,
 			&feedback.Fullname,
 			&feedback.Subject,
 			&feedback.Message,
 			&feedback.Email,
+			&feedback.CreatedAt, // Ensure this is the last field
 		)
 		if err != nil {
 			return nil, err
@@ -109,6 +113,7 @@ func (m *FeedbackModel) GetAll() ([]*Feedback, error) {
 		feedbacks = append(feedbacks, feedback)
 	}
 
+	fmt.Println("Successfully retrieved feedback data.")
 	return feedbacks, nil
 }
 

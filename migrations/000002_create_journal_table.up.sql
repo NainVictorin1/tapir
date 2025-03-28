@@ -1,8 +1,6 @@
-REATE TABLE IF NOT EXISTS journal(
-    id bigserial PRIMARY KEY,
-    created_at timestamp(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    fullname text NOT NULL,
-    subject text NOT NULL,
-    message text NOT NULL,
-    email citext NOT NULL
+CREATE TABLE journals (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    entry TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
 );

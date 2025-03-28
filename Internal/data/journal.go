@@ -3,55 +3,53 @@ package data
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/NainVictorin1/homework2/Internal/validator"
+	_ "github.com/lib/pq"
 )
 
-// Journal represents a journal entry in the database
+// Journal represents a journal entry.
 type Journal struct {
-	ID        int       `json:"id"`
+	ID        int64     `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
 	Title     string    `json:"title"`
 	Entry     string    `json:"entry"`
-	CreatedAt time.Time `json:"created_at"`
 }
 
-// JournalModel handles database operations for journal entries
+// ValidateJournal ensures journal fields meet required constraints.
+func ValidateJournal(v *validator.Validator, journal *Journal) {
+	v.Check(validator.NotBlank(journal.Title), "title", "must be provided")
+	v.Check(validator.MaxLength(journal.Title, 100), "title", "must not exceed 100 characters")
+	v.Check(validator.NotBlank(journal.Entry), "entry", "must be provided")
+	v.Check(validator.MaxLength(journal.Entry, 1000), "entry", "must not exceed 1000 characters")
+}
+
+// JournalModel handles database operations for journal entries.
 type JournalModel struct {
 	DB *sql.DB
 }
 
-func ValidateJournal(v *validator.Validator, journal *Journal) {
-	v.Check(validator.NotBlank(journal.Title), "title", "must be provided")
-	v.Check(validator.NotBlank(journal.Entry), "entry", "must be provided")
-	v.Check(validator.MaxLength(journal.Entry, 1000), "entry", "must not be more than 1000 characters long")
-}
-
-// Insert adds a new journal entry to the database
+// Insert adds a new journal entry to the database.
 func (m *JournalModel) Insert(journal *Journal) error {
 	query := `
-		INSERT INTO journals (title, entry, created_at)
-		VALUES ($1, $2, NOW())
-		RETURNING id, created_at
-	`
+		INSERT INTO journals (title, entry)
+		VALUES ($1, $2)
+		RETURNING id, created_at`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, journal.Title, journal.Entry).Scan(&journal.ID, &journal.CreatedAt)
-	if err != nil {
-		return err
-	}
-	return nil
+	return m.DB.QueryRowContext(ctx, query, journal.Title, journal.Entry).Scan(&journal.ID, &journal.CreatedAt)
 }
 
-// Get retrieves a specific journal entry by ID
-func (m *JournalModel) Get(id int) (*Journal, error) {
+// Get retrieves a specific journal entry by ID.
+func (m *JournalModel) Get(id int64) (*Journal, error) {
 	query := `
 		SELECT id, title, entry, created_at
 		FROM journals
-		WHERE id = $1
-	`
+		WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -69,11 +67,14 @@ func (m *JournalModel) Get(id int) (*Journal, error) {
 	return journal, nil
 }
 
-// GetAll retrieves all journal entries sorted by date (newest first)
+// GetAll retrieves all journal entries sorted by ID (newest first).
 func (m *JournalModel) GetAll() ([]*Journal, error) {
 	query := `
-		SELECT id, title, entry, created_at FROM journals ORDER BY created_at DESC
-	`
+		SELECT id, title, entry, created_at
+		FROM journals
+		ORDER BY id DESC`
+
+	fmt.Println("Fetching journal data...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -91,7 +92,7 @@ func (m *JournalModel) GetAll() ([]*Journal, error) {
 			&journal.ID,
 			&journal.Title,
 			&journal.Entry,
-			&journal.CreatedAt,
+			&journal.CreatedAt, // Ensure this is the last field scanned
 		)
 		if err != nil {
 			return nil, err
@@ -99,11 +100,12 @@ func (m *JournalModel) GetAll() ([]*Journal, error) {
 		journals = append(journals, journal)
 	}
 
+	fmt.Println("Successfully retrieved journal data.")
 	return journals, nil
 }
 
-// Delete removes a journal entry from the database by ID
-func (m *JournalModel) Delete(id int) error {
+// Delete removes a journal entry by ID.
+func (m *JournalModel) Delete(id int64) error {
 	query := `DELETE FROM journals WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

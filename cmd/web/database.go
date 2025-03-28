@@ -15,5 +15,9 @@ func initdatabase() {
 	database, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal("fail toconnect to database", err)
+		if err := database.Ping(); err != nil {
+			log.Fatal("failed to ping the database", err)
+		}
+		log.Println("Successfully connected to the database.")
 	}
 }

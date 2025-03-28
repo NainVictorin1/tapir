@@ -121,14 +121,13 @@ func (app *application) homeHandler(w http.ResponseWriter, r *http.Request) {
 	app.renderTemplate(w, "home.tmpl", nil)
 }
 
-// Example handler for submitting journal entry
-func (app *application) submitJournalHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) addJournalHandler(w http.ResponseWriter, r *http.Request) {
 	// Your handler logic for submitting a journal
 	app.renderTemplate(w, "submit_journal.tmpl", nil)
 }
 
 // Example handler for submitting feedback
-func (app *application) submitFeedbackHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) addFeedbackHandler(w http.ResponseWriter, r *http.Request) {
 	// Your handler logic for submitting feedback
 	app.renderTemplate(w, "feedback.tmpl", nil)
 }
@@ -140,19 +139,19 @@ func (app *application) addTodoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Example handler for viewing journals
-func (app *application) viewJournalsHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) listJournalsHandler(w http.ResponseWriter, r *http.Request) {
 	// Your handler logic for viewing journals
 	app.renderTemplate(w, "view_journal.tmpl", nil)
 }
 
 // Example handler for viewing feedbacks
-func (app *application) viewFeedbacksHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) listFeedbacksHandler(w http.ResponseWriter, r *http.Request) {
 	// Your handler logic for viewing feedback
 	app.renderTemplate(w, "view_feedback.tmpl", nil)
 }
 
 // Example handler for viewing todos
-func (app *application) viewTodosHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) listTodosHandler(w http.ResponseWriter, r *http.Request) {
 	// Your handler logic for viewing todos
 	app.renderTemplate(w, "view_todo.tmpl", nil)
 }

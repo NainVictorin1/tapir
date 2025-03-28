@@ -1,8 +1,8 @@
-CREATE TABLE IF NOT EXISTS feedback (
-    id bigserial PRIMARY KEY,
-    created_at timestamp(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    fullname text NOT NULL,
-    subject text NOT NULL,
-    message text NOT NULL,
-    email citext NOT NULL
+CREATE TABLE feedback (
+    id SERIAL PRIMARY KEY,
+    fullname VARCHAR(50),
+    subject VARCHAR(50),
+    message TEXT,
+    email VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

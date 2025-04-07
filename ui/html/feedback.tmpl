@@ -7,46 +7,52 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container feedback-container">
+    <div class="container">
         <h1>Submit Your Feedback</h1>
-        <p>We value your thoughts and would love to hear from you!</p>
 
-        {{ if .FormErrors }}
-        <div class="error-box">
-            <h3>Please fix the following errors:</h3>
-            <ul>
-                {{ range $field, $error := .FormErrors }}
-                <li><strong>{{ $field }}:</strong> {{ $error }}</li>
-                {{ end }}
-            </ul>
-        </div>
-        {{ end }}
+        <!-- Display success or error message -->
+        {{if .SuccessMessage}}
+            <div class="alert success">{{.SuccessMessage}}</div>
+        {{end}}
+        {{if .ErrorMessage}}
+            <div class="alert error">{{.ErrorMessage}}</div>
+        {{end}}
 
-        <form action="/feedback/create" method="POST" class="feedback-form">
-            <div class="input-group">
-                <label for="name">Full Name:</label>
-                <input type="text" id="name" name="name" value="{{ .FormData.name }}" placeholder="Enter your name" required>
+        <!-- Feedback form -->
+        <form method="POST" action="/feedback/submit">
+            <div class="form-group">
+                <label for="fullname">Full Name:</label>
+                <input type="text" id="fullname" name="fullname" placeholder="Enter your full name" required>
             </div>
 
-            <div class="input-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" value="{{ .FormData.email }}" placeholder="Enter your email" required>
-            </div>
-
-            <div class="input-group">
+            <div class="form-group">
                 <label for="subject">Subject:</label>
-                <input type="text" id="subject" name="subject" value="{{ .FormData.subject }}" placeholder="Enter the subject" required>
+                <input type="text" id="subject" name="subject" placeholder="Enter the subject" optional>
             </div>
 
-            <div class="input-group">
+            <div class="form-group">
                 <label for="message">Message:</label>
-                <textarea id="message" name="message" rows="5" placeholder="Write your message here..." required>{{ .FormData.message }}</textarea>
+                <textarea id="message" name="message" placeholder="Enter your feedback message" required></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary">Submit Feedback</button>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email (optional)">
+            </div>
+
+            <button type="submit" class="btn">Submit Feedback</button>
         </form>
-        <a href="/feedback/view" class="btn btn-secondary">View Feedback</a>
-        <a href="/" class="btn btn-secondary">Back to Home</a>
+
+        <!-- Buttons for navigation -->
+        <div class="button-group">
+            <a href="/feedback/view" class="btn">View Feedback</a>
+            <a href="/home" class="btn">Go to Home</a>
+        </div>
+
+        <!-- Footer section -->
+        <footer>
+            <p>&copy; 2025 Journal, Feedback & Todo App</p>
+        </footer>
     </div>
 </body>
 </html>

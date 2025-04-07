@@ -1,8 +1,8 @@
 CREATE TABLE feedback (
-    id SERIAL PRIMARY KEY,
-    fullname VARCHAR(50),
-    subject VARCHAR(50),
-    message TEXT,
-    email VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	id SERIAL PRIMARY KEY,
+	fullname TEXT NOT NULL,
+	subject TEXT,
+	message TEXT NOT NULL,
+	email TEXT,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

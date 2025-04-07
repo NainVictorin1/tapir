@@ -3,42 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Todos</title>
+    <title>View Todo List</title>
 </head>
 <body>
-    <h1>Todo List</h1>
+    <h1>Todo Entries</h1>
 
-    {{if .Todos}}
-        <table border="1">
-            <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Created At</th>
-                <th>Actions</th>
-            </tr>
-            {{range .Todos}}
-            <tr>
-                <td>{{.ID}}</td>
-                <td>{{.Title}}</td>
-                <td>{{.Description}}</td>
-                <td>{{.Status}}</td>
-                <td>{{.CreatedAt}}</td>
-                <td>
-                    <form action="/todo/delete" method="POST">
-                        <input type="hidden" name="id" value="{{.ID}}">
-                        <button type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {{end}}
-        </table>
+    <!-- Display Todo Entries -->
+    {{if .TodoEntries}}
+        <ul>
+        {{range .TodoEntries}}
+            <li>
+                <strong>Task:</strong> {{.Task}}<br>
+                <strong>Deadline:</strong> {{.Deadline}}<br>
+                <strong>Created At:</strong> {{.CreatedAt}}<br>
+                <hr>
+            </li>
+        {{end}}
+        </ul>
     {{else}}
-        <p>No todos found.</p>
+        <p>No todo entries found.</p>
     {{end}}
 
-    <br>
-    <a href="/todo/add">Add New Todo</a>
+    <!-- Buttons for Navigation -->
+    <div>
+        <a href="/home">Go to Home</a> | 
+        <a href="/todo/add">Add New Todo</a>
+    </div>
 </body>
 </html>

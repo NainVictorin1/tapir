@@ -1,264 +1,231 @@
 package main
 
 import (
+	"log"
 	"net/http"
-
-	"github.com/NainVictorin1/homework2/Internal/data"
-	"github.com/NainVictorin1/homework2/Internal/validator"
 )
 
 // Home Page Handler
-func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	data := NewTemplateData()
-	data.Title = "Welcome"
-	data.HeaderText = "We are here to help"
-
-	err := app.render(w, http.StatusOK, "home.tmpl", data)
-	if err != nil {
-		app.logger.Error("failed to render home page", "template", "home.tmpl", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
-// feedbackFormHandler renders the feedback submission form
-func (app *application) feedbackHandler(w http.ResponseWriter, r *http.Request) {
-	data := NewTemplateData()
-	data.Title = "Submit Feedback"
-
-	err := app.render(w, http.StatusOK, "feedback.tmpl", data)
-	if err != nil {
-		app.logger.Error("failed to render feedback form", "template", "feedback.tmpl", "error", err, "url", r.URL.Path, "method", r.Method)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+func home(w http.ResponseWriter, r *http.Request) {
+	renderTemplate(w, "home.tmpl", nil)
 }
 
 // submitFeedbackHandler handles feedback submission
-func (app *application) submitFeedbackHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		app.logger.Error("failed to parse form", "error", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
+func submitFeedbackHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		// Retrieve form values
+		fullname := r.FormValue("fullname")
+		subject := r.FormValue("subject")
+		message := r.FormValue("message")
+		email := r.FormValue("email")
 
-	feedback := &data.Feedback{
-		Fullname: r.PostForm.Get("name"),
-		Email:    r.PostForm.Get("email"),
-		Subject:  r.PostForm.Get("subject"),
-		Message:  r.PostForm.Get("message"),
-	}
-
-	v := validator.NewValidator()
-	data.ValidateFeedback(v, feedback)
-
-	if !v.ValidData() {
-		data := NewTemplateData()
-		data.Title = "Submit Feedback"
-		data.FormErrors = v.Errors
-		data.FormData = map[string]string{
-			"name":    feedback.Fullname,
-			"email":   feedback.Email,
-			"subject": feedback.Subject,
-			"message": feedback.Message,
-		}
-
-		err := app.render(w, http.StatusUnprocessableEntity, "feedback.tmpl", data)
-		if err != nil {
-			app.logger.Error("failed to render feedback form", "template", "feedback.tmpl", "error", err, "url", r.URL.Path, "method", r.Method)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		// Check if required fields are filled
+		if fullname == "" || message == "" {
+			renderTemplate(w, "feedback.tmpl", struct {
+				SuccessMessage string
+				ErrorMessage   string
+			}{
+				ErrorMessage: "Full name and message are required.",
+			})
 			return
 		}
+
+		// Set default values for optional fields
+		if subject == "" {
+			subject = "No subject"
+		}
+		if email == "" {
+			email = "No email provided"
+		}
+
+		// Insert feedback into the database
+		_, err := database.Exec(
+			"INSERT INTO feedback (fullname, subject, message, email, created_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)",
+			fullname, subject, message, email,
+		)
+		if err != nil {
+			log.Println("Error inserting feedback:", err)
+			renderTemplate(w, "feedback.tmpl", struct {
+				SuccessMessage string
+				ErrorMessage   string
+			}{
+				ErrorMessage: "Failed to submit feedback. Please try again later.",
+			})
+			return
+		}
+
+		// Log success and render success message
+		log.Println("Feedback submitted successfully")
+		renderTemplate(w, "feedback.tmpl", struct {
+			SuccessMessage string
+			ErrorMessage   string
+		}{
+			SuccessMessage: "Thank you for your feedback!",
+		})
 		return
 	}
-
-	err = app.feedback.Insert(feedback)
-	if err != nil {
-		app.logger.Error("failed to insert feedback entry", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, "/feedback/success", http.StatusSeeOther)
+	// Render the form for GET requests
+	renderTemplate(w, "feedback.tmpl", struct {
+		SuccessMessage string
+		ErrorMessage   string
+	}{})
 }
 
 // viewFeedbacksHandler renders a list of feedback entries
-func (app *application) viewFeedbacksHandler(w http.ResponseWriter, r *http.Request) {
-	feedbacks, err := app.feedback.GetAll()
+func viewFeedbacksHandler(w http.ResponseWriter, r *http.Request) {
+	// Query the database for feedback entries
+	rows, err := database.Query("SELECT id, fullname, subject, message, email, created_at FROM feedback ORDER BY created_at DESC")
 	if err != nil {
-		app.logger.Error("failed to fetch feedback entries", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Println("Error fetching feedback:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer rows.Close()
 
-	data := NewTemplateData()
-	data.Title = "View Feedbacks"
-	data.Feedbacks = feedbacks
+	var feedbackEntries []Feedback
+	for rows.Next() {
+		var f Feedback
+		if err := rows.Scan(&f.ID, &f.Fullname, &f.Subject, &f.Message, &f.Email, &f.CreatedAt); err != nil {
+			log.Println("Error scanning feedback row:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	err = app.render(w, http.StatusOK, "view_feedback.tmpl", data)
-	if err != nil {
-		app.logger.Error("failed to render feedbacks page", "template", "view_feedback.tmpl", "error", err, "url", r.URL.Path, "method", r.Method)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+		// Set default values for missing fields
+		if f.Subject == "" {
+			f.Subject = "No subject"
+		}
+		if f.Email == "" {
+			f.Email = "No email provided"
+		}
+
+		feedbackEntries = append(feedbackEntries, f)
 	}
-}
 
-// Todo Handlers
-
-// todoFormHandler renders the todo submission form
-func (app *application) todoHandler(w http.ResponseWriter, r *http.Request) {
-	data := NewTemplateData()
-	data.Title = "Add Todo"
-
-	err := app.render(w, http.StatusOK, "add_todo.tmpl", data)
-	if err != nil {
-		app.logger.Error("failed to render todo form", "template", "add_todo.tmpl", "error", err, "url", r.URL.Path, "method", r.Method)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+	// Log if no feedback was found
+	if len(feedbackEntries) == 0 {
+		log.Println("No feedback found")
 	}
+
+	// Render the view_feedback template with the feedback data
+	renderTemplate(w, "view_feedback.tmpl", ViewFeedbackData{FeedbackEntries: feedbackEntries})
 }
 
 // submitTodoHandler handles todo item submission
-func (app *application) submitTodoHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		app.logger.Error("failed to parse form", "error", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
+func submitTodoHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		task := r.FormValue("task")         // Use 'task' instead of 'title'
+		deadline := r.FormValue("deadline") // Use 'deadline' instead of 'status'
 
-	todo := &data.Todo{
-		Title:       r.PostForm.Get("title"),
-		Description: r.PostForm.Get("description"),
-		Status:      r.PostForm.Get("status"),
-	}
-
-	v := validator.NewValidator()
-	data.ValidateTodo(v, todo)
-
-	if !v.ValidData() {
-		data := NewTemplateData()
-		data.Title = "add_todo"
-		data.FormErrors = v.Errors
-		data.FormData = map[string]string{
-			"title":       todo.Title,
-			"description": todo.Description,
-		}
-
-		err := app.render(w, http.StatusUnprocessableEntity, "add_todo.tmpl", data)
-		if err != nil {
-			app.logger.Error("failed to render todo form", "template", "add_todo.tmpl", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		// Ensure task and deadline are provided
+		if task == "" {
+			http.Error(w, "Task cannot be empty.", http.StatusBadRequest)
 			return
 		}
+		if deadline == "" {
+			http.Error(w, "Deadline cannot be empty.", http.StatusBadRequest)
+			return
+		}
+
+		// Log the values for debugging
+		log.Printf("Inserting Todo - Task: %s, Deadline: %s", task, deadline)
+
+		// Insert the Todo item into the database
+		_, err := database.Exec(
+			"INSERT INTO todo (task, deadline, created_at) VALUES ($1, $2, CURRENT_TIMESTAMP)",
+			task, deadline,
+		)
+		if err != nil {
+			log.Printf("Error executing query: %v", err) // Log the error
+			renderTemplate(w, "add_todo.tmpl", struct{ ErrorMessage string }{"Failed to add to-do."})
+			return
+		}
+
+		renderTemplate(w, "add_todo.tmpl", struct{ SuccessMessage string }{"To-do added successfully!"})
 		return
 	}
-
-	err = app.todos.Insert(todo)
-	if err != nil {
-		app.logger.Error("failed to insert todo item", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, "/todo/view", http.StatusSeeOther)
+	renderTemplate(w, "add_todo.tmpl", nil)
 }
 
 // viewTodosHandler renders a list of todo entries
-func (app *application) viewTodosHandler(w http.ResponseWriter, r *http.Request) {
-	todos, err := app.todos.GetAll()
+func viewTodosHandler(w http.ResponseWriter, r *http.Request) {
+	// Query the todo table to fetch all required fields: task, deadline, created_at
+	rows, err := database.Query("SELECT id, task, deadline, created_at FROM todo ORDER BY created_at DESC")
 	if err != nil {
-		app.logger.Error("failed to fetch todo entries", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer rows.Close()
 
-	data := NewTemplateData()
-	data.Title = "View Todos"
-	data.Todos = todos
-
-	err = app.render(w, http.StatusOK, "view_todo.tmpl", data)
-	if err != nil {
-		app.logger.Error("failed to render todos page", "template", "view_todo.tmpl", "error", err, "url", r.URL.Path, "method", r.Method)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (app *application) JournalHandler(w http.ResponseWriter, r *http.Request) {
-	data := NewTemplateData()
-	data.Title = "Submit a Journal Entry"
-
-	err := app.render(w, http.StatusOK, "submit_journal.tmpl", data)
-	if err != nil {
-		app.logger.Error("failed to render journal form", "template", "submit_journal.tmpl", "error", err, "url", r.URL.Path, "method", r.Method)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-// submitJournalHandler handles journal entry submission
-func (app *application) submitJournalHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		app.logger.Error("failed to parse form", "error", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	journal := &data.Journal{
-		Title: r.PostForm.Get("title"),
-		Entry: r.PostForm.Get("entry"),
-	}
-
-	v := validator.NewValidator()
-	data.ValidateJournal(v, journal)
-
-	if !v.ValidData() {
-		data := NewTemplateData()
-		data.Title = "Submit a Journal Entry"
-		data.FormErrors = v.Errors
-		data.FormData = map[string]string{
-			"title": journal.Title,
-			"entry": journal.Entry,
-		}
-
-		err := app.render(w, http.StatusUnprocessableEntity, "submit_journal.tmpl", data)
-		if err != nil {
-			app.logger.Error("failed to render journal form", "template", "submit_journal.tmpl", "error", err, "url", r.URL.Path, "method", r.Method)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	var todoEntries []Todo
+	for rows.Next() {
+		var t Todo
+		// Scanning the correct fields into the Todo struct
+		if err := rows.Scan(&t.ID, &t.Task, &t.Deadline, &t.CreatedAt); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		return
+
+		todoEntries = append(todoEntries, t)
 	}
 
-	err = app.journals.Insert(journal) // Ensure this matches your struct name
-	if err != nil {
-		app.logger.Error("failed to insert journal entry", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	renderTemplate(w, "view_todo.tmpl", ViewTodoData{TodoEntries: todoEntries})
+}
+
+// submitJournalHandler handles journal subject submission
+func submitJournalHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		subject := r.FormValue("subject")
+		fullname := r.FormValue("fullname")
+
+		if subject == "" {
+			renderTemplate(w, "submit_journal.tmpl", SubmitJournalData{ErrorMessage: "Subject is required."})
+			return
+		}
+		if fullname == "" {
+			fullname = "No name provided"
+		}
+
+		_, err := database.Exec(
+			"INSERT INTO journal (subject, fullname, created_at) VALUES ($1, $2, CURRENT_TIMESTAMP)",
+			subject, fullname,
+		)
+		if err != nil {
+			renderTemplate(w, "submit_journal.tmpl", SubmitJournalData{ErrorMessage: "Failed to submit journal entry."})
+			return
+		}
+
+		renderTemplate(w, "submit_journal.tmpl", SubmitJournalData{SuccessMessage: "Journal entry submitted successfully!"})
 		return
 	}
-
-	http.Redirect(w, r, "/journals", http.StatusSeeOther)
+	renderTemplate(w, "submit_journal.tmpl", nil)
 }
 
 // listJournalsHandler renders a list of journal entries
-func (app *application) viewJournalsHandler(w http.ResponseWriter, r *http.Request) {
-	journals, err := app.journals.GetAll()
+func viewJournalsHandler(w http.ResponseWriter, r *http.Request) {
+	rows, err := database.Query("SELECT id, subject, fullname, created_at FROM journal ORDER BY created_at DESC")
 	if err != nil {
-		app.logger.Error("failed to fetch journal entries", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer rows.Close()
+	var journalEntries []Journal
+	for rows.Next() {
+		var j Journal
+		err := rows.Scan(&j.ID, &j.Subject, &j.Fullname, &j.CreatedAt)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	data := NewTemplateData()
-	data.Title = "ViewJournal "
-	data.Journals = journals
+		// Optional: fallback values
 
-	err = app.render(w, http.StatusOK, "view_journal.tmpl", data)
-	if err != nil {
-		app.logger.Error("failed to render journals page", "template", "view_journal.tmpl", "error", err, "url", r.URL.Path, "method", r.Method)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+		if j.Subject == "" {
+			j.Subject = "No subject"
+		}
+
+		journalEntries = append(journalEntries, j)
 	}
+
+	renderTemplate(w, "view_journal.tmpl", ViewJournalData{JournalEntries: journalEntries})
 }

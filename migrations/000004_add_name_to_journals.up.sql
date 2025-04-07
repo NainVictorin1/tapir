@@ -1,6 +1,0 @@
-CREATE TABLE journals (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    entry TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);

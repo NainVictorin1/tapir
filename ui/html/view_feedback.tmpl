@@ -9,36 +9,24 @@
 <body>
     <div class="container">
         <h1>Feedback Entries</h1>
-        
-        {{if not .Feedbacks}}
-            <p>No feedback available.</p>
+
+        {{if .FeedbackEntries}}
+            <div class="feedback-list">
+                {{range .FeedbackEntries}}
+                    <div class="feedback-entry">
+                        <p><strong>{{.Fullname}}</strong> ({{.Email}})</p>
+                        <p><strong>Subject:</strong> {{.Subject}}</p>
+                        <p><strong>Message:</strong> {{.Message}}</p>
+                        <p><strong>Submitted:</strong> {{.CreatedAt}}</p>
+                        <hr>
+                    </div>
+                {{end}}
+            </div>
         {{else}}
-            <table class="feedback-table">
-                <thead>
-                    <tr>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>Subject</th>
-                        <th>Message</th>
-                        <th>Submitted On</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{range .Feedbacks}}
-                    <tr>
-                        <td>{{.Fullname}}</td>
-                        <td>{{.Email}}</td>
-                        <td>{{.Subject}}</td>
-                        <td>{{.Message}}</td>
-                        <td>{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</td>
-                    </tr>
-                    {{end}}
-                </tbody>
-            </table>
+            <p>No feedback entries found.</p>
         {{end}}
 
-        <a href="/feedback" class="btn">Submit More Feedback</a>
-        <a href="/home" class="btn">Back to Home</a>
+        <a href="/home" class="btn">Go Home</a>
     </div>
 </body>
 </html>

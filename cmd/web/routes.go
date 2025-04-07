@@ -4,31 +4,17 @@ import (
 	"net/http"
 )
 
-func (app *application) routes() http.Handler {
-	mux := http.NewServeMux()
+func registerRoutes() {
+	http.HandleFunc("/", loggingMiddleware(http.HandlerFunc(home)).ServeHTTP)
+	http.HandleFunc("/home", loggingMiddleware(http.HandlerFunc(home)).ServeHTTP)
+	http.HandleFunc("/journal/add", loggingMiddleware(http.HandlerFunc(submitJournalHandler)).ServeHTTP)
+	http.HandleFunc("/journal/view", loggingMiddleware(http.HandlerFunc(viewJournalsHandler)).ServeHTTP)
+	http.HandleFunc("/feedback/submit", loggingMiddleware(http.HandlerFunc(submitFeedbackHandler)).ServeHTTP)
+	http.HandleFunc("/feedback/view", loggingMiddleware(http.HandlerFunc(viewFeedbacksHandler)).ServeHTTP)
+	http.HandleFunc("/todo/add", loggingMiddleware(http.HandlerFunc(submitTodoHandler)).ServeHTTP)
+	http.HandleFunc("/todo/view", loggingMiddleware(http.HandlerFunc(viewTodosHandler)).ServeHTTP)
 
-	// Serve static files from the ./ui/static/ directory
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	// Home Route
-	mux.HandleFunc("/", app.homeHandler) // Corrected route for the home handler
-
-	// Feedback Routes
-	mux.HandleFunc("/feedback/submit", app.submitFeedbackHandler)
-	mux.HandleFunc("/feedback/view", app.viewFeedbacksHandler) // Displays all feedback entries
-	mux.HandleFunc("/feedback/create", app.submitFeedbackHandler)
-
-	// Todo Routes
-	mux.HandleFunc("/todo/add", app.addTodoHandler)    // Handles displaying the to-do form
-	mux.HandleFunc("/todo/create", app.addTodoHandler) // Handles to-do item submission
-	mux.HandleFunc("/todo/view", app.viewTodosHandler) // Displays all to-do items
-
-	// Journal Routes
-	mux.HandleFunc("/journal/add", app.submitJournalHandler)    // Handles displaying the journal form
-	mux.HandleFunc("/journal/create", app.submitJournalHandler) // Handles journal submission
-	mux.HandleFunc("/journal/view", app.viewJournalsHandler)    // Displays all journal entries
-
-	// Return the middleware-wrapped mux
-	return app.loggingMiddleware(mux)
+	// Static file server
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 }

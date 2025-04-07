@@ -3,36 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Journal Entry</title>
+    <title>Submit Journal Entry | Journal, Feedback & Todo App</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Submit a New Journal Entry</h1>
+        <h1>Submit Journal Entry</h1>
 
-        {{if .FormErrors}}
-            <div class="error-box">
-                <p>Please correct the following errors:</p>
-                <ul>
-                    {{range .FormErrors}}
-                        <li>{{.}}</li>
-                    {{end}}
-                </ul>
-            </div>
+        <!-- Display success or error message -->
+        {{if .SuccessMessage}}
+            <div class="alert success">{{.SuccessMessage}}</div>
+        {{end}}
+        {{if .ErrorMessage}}
+            <div class="alert error">{{.ErrorMessage}}</div>
         {{end}}
 
-        <form action="/journal/submit" method="POST" class="form-container">
-            <label for="title">Title:</label>
-            <input type="text" id="title" name="title" value="{{.FormData.title}}" required>
+        <!-- Form for submitting journal entry -->
+        <form method="POST" action="/journal/add">
+            <div class="form-group">
+                <label for="fullname">Full Name:</label>
+                <input type="text" id="fullname" name="fullname" required>
+            </div>
 
-            <label for="entry">Journal Entry:</label>
-            <textarea id="entry" name="entry" rows="6" required>{{.FormData.entry}}</textarea>
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject" name="subject" required>
+            </div>
 
-            <button type="submit" class="btn">Submit Journal</button>
+            <button type="submit" class="btn">Submit Journal Entry</button>
         </form>
 
-        <a href="/journal/view" class="btn btn-secondary">View Entries</a>
-        <a href="/home" class="btn btn-secondary">Back to Home</a>
+        <!-- Navigation buttons -->
+        <div class="button-group" style="margin-top: 20px;">
+            <a href="/home" class="btn btn-secondary">Go to Home</a>
+            <a href="/journal/view" class="btn btn-secondary">View Journal Entries</a>
+        </div>
+
+        <footer>
+            <p> echo por Nain Victorin;) </p>
+        </footer>
     </div>
 </body>
 </html>

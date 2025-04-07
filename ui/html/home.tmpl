@@ -5,24 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home | Journal, Feedback & Todo App</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Georgia&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Your Personal Space</h1>
-        <p>Manage your daily journal, submit feedback, and track your tasks effortlessly.</p>
+    <div class="home-wrapper">
+        <header>
+            <h1 class="main-title">Welcome to Your Personal Space</h1>
+            <p class="subtitle">Manage your journal, feedback, and to-dos all in one place.</p>
+        </header>
 
-        <div class="btn-container">
-            <a href="/todo/add" class="btn">Submit a Todo Item</a>
-            <a href="/todo/view" class="btn">View Todo Item</a>
-            <a href="/journal/add" class="btn">Submit a Journal Entry</a>
-            <a href="/journal/view" class="btn">View a Journal Entry</a>
-            <a href="/feedback/submit" class="btn">Submit Feedback</a>
-            <a href="/feedback/view" class="btn">View Feedback</a>
-           
-        </div>
+        <main class="button-grid">
+            <a href="/todo/add" class="btn-classic">Submit a Todo Item</a>
+            <a href="/todo/view" class="btn-classic">View Todo Items</a>
+            <a href="/journal/add" class="btn-classic">Submit Journal Entry</a>
+            <a href="/journal/view" class="btn-classic">View Journal Entries</a>
+            <a href="/feedback/submit" class="btn-classic">Submit Feedback</a>
+            <a href="/feedback/view" class="btn-classic">View Feedback</a>
+        </main>
 
-        <footer>Nain Victorin Homework2</footer>
+        <footer>
+            <p class="footer-text">Made by Nain Victorin | Homework 2</p>
+        </footer>
     </div>
 </body>
 </html>

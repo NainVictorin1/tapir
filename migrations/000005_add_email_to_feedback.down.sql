@@ -1,2 +1,2 @@
-DROP TABLE IF EXISTS feedback;
-
+ALTER TABLE feedback
+DROP COLUMN email;

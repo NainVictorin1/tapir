@@ -1,0 +1,2 @@
+ALTER TABLE journal
+ADD COLUMN name VARCHAR(255);
